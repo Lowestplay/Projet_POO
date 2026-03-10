@@ -1,0 +1,81 @@
+@startuml
+actor User
+
+participant "Interface Graphique (GUI)" as GUI
+participant "Moteur du Jeu (GameEngine)" as Engine
+participant "Grille" as Grid
+participant "Cellules" as Cells
+participant "Gestion Fichiers" as FileIO
+
+== Initialisation ==
+User -> GUI : lancer_application()
+GUI -> Engine : init_jeu()
+Engine -> Grid : creer_grille(taille_x, taille_y)
+Grid -> Cells : initialiser_cellules_vide()
+GUI -> GUI : afficher_grille_vide()
+GUI -> GUI : etat = "En attente"
+
+== Interaction Utilisateur ==
+User -> GUI : clic_gauche(x, y)
+GUI -> Grid : placer_cellule_vivante(x, y)
+Grid -> GUI : mise_a_jour_affichage(x, y)
+
+User -> GUI : clic_droit(x, y)
+GUI -> Grid : supprimer_cellule(x, y)
+Grid -> GUI : mise_a_jour_affichage(x, y)
+
+User -> GUI : bouton_reset()
+GUI -> Engine : reinitialiser_grille()
+Engine -> Grid : vider_grille()
+Grid -> GUI : afficher_grille_vide()
+
+== Simulation ==
+User -> GUI : bouton_start()
+GUI -> Engine : demarrer_simulation()
+
+loop tant que simulation_active
+    Engine -> Grid : calculer_generation_suivante()
+    Grid -> Cells : compter_voisins()
+    Cells --> Grid : etat_suivant()
+    Grid --> Engine : grille_mise_a_jour()
+    Engine -> GUI : mise_a_jour_affichage()
+    GUI -> GUI : afficher_nouvelle_generation()
+end
+
+== Pause / Reprise ==
+User -> GUI : bouton_pause()
+GUI -> Engine : suspendre_simulation()
+Engine -> GUI : etat = "Pause"
+
+User -> GUI : bouton_start()
+GUI -> Engine : reprendre_simulation()
+Engine -> GUI : etat = "En cours"
+
+== Sauvegarde et Chargement ==
+User -> GUI : bouton_sauvegarde()
+GUI -> Engine : demander_etat()
+Engine -> Grid : fournir_etat()
+Grid --> Engine : matrice_cellules
+Engine -> FileIO : sauvegarder(matrice_cellules)
+GUI -> GUI : afficher_message("Grille sauvegardée")
+
+User -> GUI : bouton_charger()
+GUI -> FileIO : charger()
+FileIO --> GUI : matrice_cellules
+GUI -> Grid : restaurer_grille(matrice_cellules)
+GUI -> GUI : afficher_grille_chargee()
+
+== Arrêt du Jeu ==
+User -> GUI : bouton_stop()
+GUI -> Engine : arreter_simulation()
+Engine -> GUI : etat = "Arrêté"
+GUI -> GUI : afficher_message("Simulation arrêtée")
+
+== Gestion des Erreurs ==
+GUI -> GUI : erreur_fichier_invalide()
+GUI -> GUI : afficher_message("Erreur : fichier non valide")
+
+GUI -> GUI : erreur_sauvegarde()
+GUI -> GUI : afficher_message("Erreur : sauvegarde impossible")
+
+@enduml

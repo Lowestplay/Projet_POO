@@ -1,0 +1,25 @@
+# Utilisation d'une image Debian légère (Bookworm Slim)
+# C'est plus stable pour les dépendances graphiques que Alpine
+FROM debian:bookworm-slim
+
+# Mettre à jour et installer les outils de compilation + SFML
+# libsfml-dev contient tous les headers et libs nécessaires
+RUN apt-get update && apt-get install -y \
+    g++ \
+    make \
+    libsfml-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Création du dossier de travail
+WORKDIR /app
+
+# Copie de tout le projet dans le conteneur
+COPY . .
+
+# Lancer la compilation via le Makefile
+RUN make
+
+# Commande par défaut (Tentative de lancement)
+# Note : Cela échouera probablement sans écran (Error: Failed to open display),
+# mais cela prouve que l'exécutable existe.
+CMD ["./jeu_de_la_vie_sfml", "--file=input.txt", "--mode=gui"]
